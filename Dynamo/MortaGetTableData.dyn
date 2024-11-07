@@ -1,0 +1,194 @@
+{
+  "Uuid": "1142a833-51ff-4380-b016-ced1f8680f28",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "MortaAPICall",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import sys\r\nimport clr\r\nimport time\r\nimport json\r\nfrom System import *\r\nfrom System.IO import StreamReader\r\nfrom System.Net import HttpWebRequest, WebHeaderCollection\r\n\r\ndataEnteringNode = IN\r\napi_key = IN[0]\r\ntableid = IN[1]\r\n\r\ndef mortapagecall(tableid, api_key, size):\r\n    base_url = \"https://api.morta.io/v1/table/\" + tableid + \"/row\"\r\n    data = []\r\n    next_page_token = \"\"\r\n    \r\n    while True:\r\n        # Update URL with pagination token if available\r\n        url = base_url + \"?size=\" + str(size)\r\n        if next_page_token:\r\n            url += \"&nextPageToken=\" + next_page_token\r\n        \r\n        # Create and configure the request\r\n        req = HttpWebRequest.Create(url)\r\n        req.Method = \"GET\"\r\n        req.Headers = WebHeaderCollection()\r\n        req.Headers.Add(\"Authorization\", \"Bearer \" + api_key)\r\n        req.UserAgent = \"IronPython\"\r\n        req.Accept = 'application/json'\r\n     \r\n        # Execute the request\r\n        response = req.GetResponse()\r\n        stream = response.GetResponseStream()\r\n        reader = StreamReader(stream)\r\n        response_text = reader.ReadToEnd()\r\n        \r\n        # Parse JSON response\r\n        response_data = json.loads(response_text)\r\n        for item in response_data[\"data\"]:\r\n            if \"rowData\" in item:\r\n                data.append(item[\"rowData\"])\r\n        \r\n        \r\n        # Check for next page token\r\n        if \"metadata\" in response_data and \"nextPageToken\" in response_data[\"metadata\"]:\r\n            next_page_token = response_data[\"metadata\"][\"nextPageToken\"]\r\n            if not next_page_token:\r\n                break\r\n        else:\r\n            break\r\n        \r\n        # Clean up\r\n        reader.Close()\r\n        response.Close()\r\n        \r\n        # Delay to avoid overwhelming the server\r\n        time.sleep(1)\r\n    \r\n    return data\r\n\r\n# Use the function\r\ndata = mortapagecall(tableid, api_key, 2000)\r\ncolumns = list(data[0].keys())\r\nrowdata = [list(item.values()) for item in data]\r\n\r\nOUT =[columns,rowdata]\r\n",
+      "Engine": "CPython3",
+      "EngineName": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "155a03a2216746fab8cd90c959771e9c",
+      "Inputs": [
+        {
+          "Id": "f0157a5dff164c998594c8af20e03996",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "9091575d7c4f49f9b398be81731ed57c",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "79b3a084624545e086dd846be88cf987",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.StringInput, CoreNodeModels",
+      "NodeType": "StringInputNode",
+      "InputValue": "",
+      "Id": "b9d21f5d15bc43aa8899b87195b7ad30",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "1924b378537a4e61ae1fcce8c1ba9621",
+          "Name": "",
+          "Description": "String",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a string."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.StringInput, CoreNodeModels",
+      "NodeType": "StringInputNode",
+      "InputValue": "",
+      "Id": "b80a7ea7b56344768c5a50247a7a1336",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "79febefbbcb94e95b0418aba81deff2e",
+          "Name": "",
+          "Description": "String",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a string."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "1924b378537a4e61ae1fcce8c1ba9621",
+      "End": "9091575d7c4f49f9b398be81731ed57c",
+      "Id": "b3b0158c31f545a6b7df2a39a412584d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "79febefbbcb94e95b0418aba81deff2e",
+      "End": "f0157a5dff164c998594c8af20e03996",
+      "Id": "956e119eadc747cdadac884434575799",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.16",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "3.0",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.16.2.5624",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "155a03a2216746fab8cd90c959771e9c",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 638.19796636318677,
+        "Y": 635.29739436215527
+      },
+      {
+        "Name": "TableID",
+        "ShowGeometry": true,
+        "Id": "b9d21f5d15bc43aa8899b87195b7ad30",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 282.00206052890826,
+        "Y": 778.10035092489477
+      },
+      {
+        "Name": "API key",
+        "ShowGeometry": true,
+        "Id": "b80a7ea7b56344768c5a50247a7a1336",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 273.227029279614,
+        "Y": 578.741121697667
+      }
+    ],
+    "Annotations": [],
+    "X": -126.03349193900954,
+    "Y": -697.99593810692772,
+    "Zoom": 1.4936443080800197
+  }
+}
